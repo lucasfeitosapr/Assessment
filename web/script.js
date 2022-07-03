@@ -1,36 +1,35 @@
-
 // Objeto global para a aplicação
 let app = {
    // Propriedades do objeto no formato par 'chave: valor'
    container: document.getElementById("container"),
-   cards: loadCards(),
-   firstCard: [],
+   minutesLabel: document.getElementById("minutes"),
+   secondsLabel: document.getElementById("seconds"),
+   newGame: document.getElementById("newGame"),
+   cards: null,
+   selectedCards: [],
    cardContainers: [],
    cells: [],
    table: null,
-   minutesLabel: document.getElementById("minutes"),
-   secondsLabel: document.getElementById("seconds"),
    totalSeconds: 0,
-   newGame: document.getElementById("newGame"),
    intervalId: null,
+
    // Classes do objeto
    iniciar: function () {
-      console.log(app.container)
-      if(window.refreshIntervalId != null) {
-         console.log("clear interval")
-         clearInterval(window.refreshIntervalId);
-         app.secondsLabel.innerHTML = " : " + 00;
-         app.minutesLabel.innerHTML = 00;
-         app.totalSeconds = 0;
+
+      if(hasRunningInterval()) {
+         clearTimer();
       }
+
       app.cards = loadCards();
       app.newGame.addEventListener("click", app.iniciar);
-      if(app.table != null) {
+
+      if(hasTable()) {
          app.container.removeChild(app.table);
       }
-      tableCreate();
-      window.refreshIntervalId = setInterval(setTime, 1000);
-      console.log(app.intervalId)
+
+      generateGameBoard();
+
+      window.refreshIntervalId = setInterval(timer, 1000);
    },
 
 };
@@ -43,139 +42,191 @@ let app = {
 
 })();
 
-function setTime() {
+function timer() {
    app.totalSeconds++;
-   app.secondsLabel.innerHTML = pad(" : " + app.totalSeconds % 60);
-   app.minutesLabel.innerHTML = pad(parseInt(app.totalSeconds / 60));
+   app.secondsLabel.innerHTML = formatTimer(app.totalSeconds % 60);
+   app.minutesLabel.innerHTML = formatTimer(parseInt(app.totalSeconds / 60)) + " :";
 }
 
-function pad(val) {
-   var valString = val + "";
-   if (valString.length < 2) {
-     return "0" + valString;
+function formatTimer(time) {
+   var timeString = time + "";
+   if (timeString.length < 2) {
+     return "0" + timeString;
    } else {
-     return valString;
+     return timeString;
    }
 }
 
-function tableCreate() {
-   const tbl = document.createElement('table');
+function clearTimer() {
+   clearInterval(window.refreshIntervalId);
+   app.secondsLabel.innerHTML = " : " + 00;
+   app.minutesLabel.innerHTML = 00;
+   app.totalSeconds = 0;
+}
 
-   tbl.style.width = '800px';
-   tbl.style.height = '600px';
-   tbl.style.border = '1px solid black';
-   tbl.style.textAlign = 'center';
-   let count = 0;
+function hasRunningInterval() {
+   return window.refreshIntervalId != null;
+}
 
-   for (let i = 0; i < 4; i++) {
-     const tr = tbl.insertRow();
-     for (let j = 0; j < 4; j++) {
+function generateGameBoard() {
+   const tbl = createTable();
 
-         const td = tr.insertCell();
-
-         let cardContainer = document.createElement("div");
-         cardContainer.className = "card";
-         cardContainer.id = `card${count}`;
-         
-         let divFront = document.createElement("div")
-         divFront.className = "front";
-
-         let divBack = document.createElement("div")
-         divBack.className = "back";
-
-         let imgBack = document.createElement("img");
-         imgBack.src = app.cards[count].backPath;
-
-         let imgFront = document.createElement("img");
-         imgFront.src = app.cards[count].path;
-         imgFront.id = app.cards[count].id;
-         
-         divBack.appendChild(imgBack);
-         divFront.appendChild(imgFront);
-
-         cardContainer.appendChild(divBack);
-         cardContainer.appendChild(divFront);
-
-         td.style.border = '1px solid black';
-         td.appendChild(cardContainer);
-
-         td.addEventListener("click", flipCard);
-
-         count++;
-     }
-   }
+   createRowsAndColumns(tbl);
 
    app.table = tbl;
    app.container.appendChild(tbl);
 }
 
+function hasTable() {
+   return app.table != null;
+}
+
+function createTable() {
+   let table = document.createElement('table');
+
+   table.style.width = '800px';
+   table.style.height = '600px';
+   table.style.border = '1px solid black';
+   table.style.textAlign = 'center';
+
+   return table;
+}
+
+function createRowsAndColumns(tbl) {
+
+   let count = 0;
+
+   for (let i = 0; i < 4; i++) {
+      const tr = tbl.insertRow();
+
+      for (let j = 0; j < 4; j++) {
+ 
+          const td = tr.insertCell();
+ 
+          let cardContainer = document.createElement("div");
+          cardContainer.className = "card";
+          cardContainer.id = `card${count}`;
+          
+          let divFront = document.createElement("div")
+          divFront.className = "front";
+ 
+          let divBack = document.createElement("div")
+          divBack.className = "back";
+ 
+          let imgBack = document.createElement("img");
+          imgBack.src = app.cards[count].backPath;
+ 
+          let imgFront = document.createElement("img");
+          imgFront.src = app.cards[count].path;
+          imgFront.id = app.cards[count].id;
+          
+          divBack.appendChild(imgBack);
+          divFront.appendChild(imgFront);
+ 
+          cardContainer.appendChild(divBack);
+          cardContainer.appendChild(divFront);
+ 
+          td.style.border = '1px solid black';
+          td.appendChild(cardContainer);
+ 
+          td.addEventListener("click", flipCard);
+ 
+          count++;
+      }
+    }
+}
+
 function flipCard() {
-   // console.log("cell clicked: ", this.cellIndex, "Row Index: ",  this.parentNode.rowIndex)
 
    const cell = this;
-   const row = cell.parentElement;
 
-   if(cell.querySelectorAll('img')[1] === app.firstCard[0]) return;
-   if(cell.querySelectorAll('img')[1] === app.firstCard[1]) return;
+   if(clickedOnSameCard(cell, 0)) return;
+   if(clickedOnSameCard(cell, 1)) return;
 
-   // console.log(cell.querySelectorAll("div")[1].classList.toggle("flipCard"));
-   
    let divCard = cell.querySelector("div");
    divCard.classList.toggle("flipCard");
 
-   
-   if(app.firstCard.length === 1) {
-      app.firstCard.push(cell.querySelectorAll('img')[1])
-      app.cardContainers.push(divCard);
-      app.cells.push(cell);
-   }
+   updateSelectedCard(cell, divCard);
 
-   if(app.firstCard.length === 0) {
-      app.firstCard.push(cell.querySelectorAll('img')[1])
-      app.cardContainers.push(divCard);
-      app.cells.push(cell);
-   }
-
-   if(app.firstCard.length === 2) {
-
+   if(app.selectedCards.length === 2) {
       document.body.style.pointerEvents = 'none';
       setTimeout(verifyCards, 1500);
-
    }
+}
 
-      
+function updateSelectedCard(cell, divCard) {
+   app.selectedCards.push(cell.querySelectorAll('img')[1])
+   app.cardContainers.push(divCard);
+   app.cells.push(cell);
+}
+
+function clickedOnSameCard(cell, cardNumber) {
+   return cell.querySelectorAll('img')[1] === app.selectedCards[cardNumber];
 }
 
 function verifyCards() {
    
-   if(app.firstCard[0].id.includes(app.firstCard[1].id)){
-      app.cardContainers = [];
-      app.firstCard = [];
-      app.cells[0].removeEventListener("click", flipCard);
-      app.cells[1].removeEventListener("click", flipCard);
-      app.cells = [];
-      document.body.style.pointerEvents = 'auto';
-      app.cards.pop();
-      app.cards.pop();
+   if(cardsMatch()){
+      
+      disableMatchedCards();
 
-      if(app.cards.length === 0) {
-         let minutes = app.minutesLabel.textContent;
-         let seconds = app.secondsLabel.textContent;
+      resetTurn();
 
-         window.alert(`Jogo terminado em: ${minutes}${seconds}! Gerando novo jogo...`);
-         app.iniciar();
+      if(hasNoCardsLeft()) {
+         finishAndRestartGame();
       }
 
    } else {
-      app.cardContainers[0].classList.toggle("flipCard");
-      app.cardContainers[1].classList.toggle("flipCard");
-      app.cardContainers = [];
-      app.firstCard = [];
-      app.cells = [];
-      document.body.style.pointerEvents = 'auto';
+
+      flipBackCards();
+
+      resetTurn();
    }
 }
+
+function resetTurn() {
+   app.cardContainers = [];
+   app.selectedCards = [];
+   app.cells = [];
+   document.body.style.pointerEvents = 'auto';
+
+}
+
+function finishAndRestartGame() {
+   let minutes = app.minutesLabel.textContent;
+   let seconds = app.secondsLabel.textContent;
+
+   window.alert(`Jogo terminado em: ${minutes}${seconds}! Gerando novo jogo...`);
+   app.iniciar();
+}
+
+function disableMatchedCards() {
+   app.cells.forEach(cell => {
+      cell.removeEventListener("click", flipCard);
+   })
+
+   document.body.style.pointerEvents = 'auto';
+
+   app.cards.pop();
+   app.cards.pop();
+}
  
+function cardsMatch() {
+   let firstSelectedCardId = app.selectedCards[0].id;
+   let secondSelectedCardId = app.selectedCards[1].id;
+
+   return firstSelectedCardId === secondSelectedCardId;
+}
+
+function hasNoCardsLeft() {
+   return app.cards.length === 0;
+}
+
+function flipBackCards() {
+   app.cardContainers.forEach(container => {
+      container.classList.toggle("flipCard");
+   })
+}
 
 function loadCards() {
    let cards = [];
@@ -192,22 +243,15 @@ function loadCards() {
    }
 
    cards = cards.concat(cards);
-   shuffleArray(cards);
+   shuffleCards(cards);
 
    return cards;
 }
 
-function shuffleArray(array) {
-   for (let i = array.length - 1; i > 0; i--) {
+function shuffleCards(cards) {
+   for (let i = cards.length - 1; i > 0; i--) {
        const j = Math.floor(Math.random() * (i + 1));
-       [array[i], array[j]] = [array[j], array[i]];
+       [cards[i], cards[j]] = [cards[j], cards[i]];
    }
 }
 
-class Card {
-   constructor(id, path, backPath) {
-      this.id = id;
-      this.path = path;
-      this.backPath = backPath;
-   }
-}
