@@ -14,14 +14,20 @@ let app = {
    intervalId: null,
 
    // Classes do objeto
+   loadGame: function () {
+      app.newGame.addEventListener("click", app.iniciar);
+      app.cards = loadCards();
+      generateGameBoard();
+      flipAllCards();
+
+   },
+
    iniciar: function () {
+      app.cards = loadCards();
 
       if(hasRunningInterval()) {
          clearTimer();
       }
-
-      app.cards = loadCards();
-      app.newGame.addEventListener("click", app.iniciar);
 
       if(hasTable()) {
          app.container.removeChild(app.table);
@@ -29,7 +35,18 @@ let app = {
 
       generateGameBoard();
 
-      window.refreshIntervalId = setInterval(timer, 1000);
+      flipAllCards();
+
+      if(hasRunningSetTimeout()) {
+         clearSetTimeout();
+      }
+
+      window.setTimeoutId = setTimeout(function(){
+         flipAllCards(),
+         window.refreshIntervalId = setInterval(timer, 1000)
+      }, 2000);
+      
+      
    },
 
 };
@@ -37,7 +54,7 @@ let app = {
 (() => {
    
    // Chamar o método do objeto global
-   app.iniciar();
+   app.loadGame();
 
 
 })();
@@ -66,6 +83,14 @@ function clearTimer() {
 
 function hasRunningInterval() {
    return window.refreshIntervalId != null;
+}
+
+function clearSetTimeout() {
+   clearTimeout(window.setTimeoutId);
+}
+
+function hasRunningSetTimeout() {
+   return window.setTimeoutId != null;
 }
 
 function generateGameBoard() {
@@ -152,6 +177,13 @@ function flipCard() {
       document.body.style.pointerEvents = 'none';
       setTimeout(verifyCards, 1500);
    }
+}
+
+function flipAllCards() {
+   let cards = document.querySelectorAll('.card')
+   cards.forEach(card => {
+      card.classList.toggle("flipCard");
+   })
 }
 
 function updateSelectedCard(cell, divCard) {
