@@ -25,6 +25,7 @@ let app = {
    iniciar: function () {
       app.cards = loadCards();
 
+
       if(hasRunningInterval()) {
          clearTimer();
       }
@@ -42,7 +43,7 @@ let app = {
       }
 
       window.setTimeoutId = setTimeout(function(){
-         flipAllCards(),
+         flipAllCards();
          window.refreshIntervalId = setInterval(timer, 1000)
       }, 2000);
       
@@ -101,6 +102,7 @@ function generateGameBoard() {
    app.table = tbl;
    app.container.appendChild(tbl);
 }
+
 
 function hasTable() {
    return app.table != null;
