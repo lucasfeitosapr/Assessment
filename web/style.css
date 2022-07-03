@@ -1,14 +1,15 @@
 
 header {
-    /* display: flex;
-    flex-direction: column;
-    align-items: center; */
-    position: absolute;
-    top: 10%;
-    left: 35%;
-    transform: translate(-10%, -35%);
+
+
     text-align: center;
     z-index: 1;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 button {
