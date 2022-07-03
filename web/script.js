@@ -19,12 +19,13 @@ let app = {
       app.cards = loadCards();
       generateGameBoard();
       flipAllCards();
+      app.container.style.pointerEvents = 'none';
 
    },
 
    iniciar: function () {
       app.cards = loadCards();
-
+      app.container.style.pointerEvents = 'none';
 
       if(hasRunningInterval()) {
          clearTimer();
@@ -44,7 +45,9 @@ let app = {
 
       window.setTimeoutId = setTimeout(function(){
          flipAllCards();
-         window.refreshIntervalId = setInterval(timer, 1000)
+         window.refreshIntervalId = setInterval(timer, 1000);
+         app.container.style.pointerEvents = 'auto';
+
       }, 2000);
       
       
@@ -176,7 +179,7 @@ function flipCard() {
    updateSelectedCard(cell, divCard);
 
    if(app.selectedCards.length === 2) {
-      document.body.style.pointerEvents = 'none';
+      app.container.style.pointerEvents = 'none';
       setTimeout(verifyCards, 1500);
    }
 }
@@ -222,7 +225,7 @@ function resetTurn() {
    app.cardContainers = [];
    app.selectedCards = [];
    app.cells = [];
-   document.body.style.pointerEvents = 'auto';
+   app.container.style.pointerEvents = 'auto';
 
 }
 
@@ -239,7 +242,7 @@ function disableMatchedCards() {
       cell.removeEventListener("click", flipCard);
    })
 
-   document.body.style.pointerEvents = 'auto';
+   app.container.style.pointerEvents = 'auto';
 
    app.cards.pop();
    app.cards.pop();
